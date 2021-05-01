@@ -80,8 +80,7 @@ impl TaskBlock {
 
 		Ok(CardComponent {
 			color: block.color.clone(),
-			content: box content.into(),
-			header: None,
+			..CardComponent::new(content)
 		}
 		.into())
 	}
