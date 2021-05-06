@@ -12,10 +12,7 @@ use block_tools::{
 		},
 		form::dropdown::DropdownComponent,
 		interact::link::LinkComponent,
-		layout::{
-			card::CardComponent,
-			stack::{AlignXOptions, StackComponent},
-		},
+		layout::{card::CardComponent, stack::StackComponent},
 		DisplayComponent,
 	},
 	models::Block,
@@ -36,16 +33,14 @@ impl TaskBlock {
 			status,
 		} = Self::from_id(block.id, user_id, conn)?;
 
-		let mut left_col = StackComponent::vertical();
-		let mut middle_col = StackComponent::vertical();
-		let mut right_col = StackComponent {
-			align_x: Some(AlignXOptions::Right),
-			..StackComponent::vertical()
-		};
+		let mut icon_col = StackComponent::vertical();
+		let mut content_col = StackComponent::vertical();
+
+		let mut first_row = StackComponent::fit();
 
 		let name = name
 			.and_then(|block| block.block_data)
-			.unwrap_or_else(|| "Untitled Habit".into());
+			.unwrap_or_else(|| "Untitled Task".into());
 		let text = TextComponent {
 			bold: Some(true),
 			..TextComponent::new(name)
@@ -55,11 +50,7 @@ impl TaskBlock {
 			no_style: Some(true),
 			..LinkComponent::new(text)
 		};
-		middle_col.push(link);
-
-		if let Some(desc) = Self::description(&description, false) {
-			middle_col.push(desc)
-		}
+		first_row.push(link);
 
 		let mut status_dropdown = DropdownComponent {
 			disabled: Some(true),
@@ -70,13 +61,18 @@ impl TaskBlock {
 				status_dropdown.disabled = Some(false)
 			}
 		}
-		right_col.push(status_dropdown);
-		left_col.push(IconComponent::new(Icon::TaskComplete));
+		first_row.push(status_dropdown);
+		content_col.push(first_row);
+
+		if let Some(desc) = Self::description(&description, false) {
+			content_col.push(desc)
+		}
+
+		icon_col.push(IconComponent::new(Icon::TaskComplete));
 
 		let mut content = StackComponent::horizontal();
-		content.push(left_col);
-		content.push(middle_col);
-		content.push(right_col);
+		content.push(icon_col);
+		content.push(content_col);
 
 		Ok(CardComponent {
 			color: block.color.clone(),
