@@ -12,7 +12,11 @@ use block_tools::{
 		},
 		form::dropdown::DropdownComponent,
 		interact::link::LinkComponent,
-		layout::{card::CardComponent, stack::StackComponent},
+		layout::{
+			card::{CardComponent, DetachedMenu},
+			stack::StackComponent,
+		},
+		menus::menu::MenuComponent,
 		DisplayComponent,
 	},
 	models::Block,
@@ -56,10 +60,16 @@ impl TaskBlock {
 			disabled: Some(true),
 			..Self::status(status, block.id)
 		};
+
+		let mut detached_menu = None;
+
 		if let Some(user_id) = user_id {
 			if has_perm_level(user_id, block, PermLevel::Edit) {
 				status_dropdown.disabled = Some(false)
 			}
+			let mut menu = MenuComponent::from_block(block, user_id);
+			menu.load_comments(conn)?;
+			detached_menu = Some(DetachedMenu::bottom_right(menu));
 		}
 		first_row.push(status_dropdown);
 		content_col.push(first_row);
@@ -76,6 +86,7 @@ impl TaskBlock {
 
 		Ok(CardComponent {
 			color: block.color.clone(),
+			detached_menu,
 			..CardComponent::new(content)
 		}
 		.into())
