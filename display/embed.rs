@@ -14,7 +14,7 @@ use block_tools::{
 		interact::link::LinkComponent,
 		layout::{
 			card::{CardComponent, DetachedMenu},
-			stack::StackComponent,
+			stack::{SpacingOptions, StackComponent},
 		},
 		menus::menu::MenuComponent,
 		DisplayComponent,
@@ -40,7 +40,10 @@ impl TaskBlock {
 		let mut icon_col = StackComponent::vertical();
 		let mut content_col = StackComponent::vertical();
 
-		let mut first_row = StackComponent::fit();
+		let mut first_row = StackComponent {
+			spacing: Some(SpacingOptions::Between),
+			..StackComponent::fit()
+		};
 
 		let name = name
 			.and_then(|block| block.block_data)
