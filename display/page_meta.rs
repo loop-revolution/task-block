@@ -30,7 +30,7 @@ impl TaskBlock {
 			let menu = MenuComponent::from_block(block, user_id);
 			if let Some(name) = &self.name {
 				// If the user can edit the name
-				if has_perm_level(user_id, &name, PermLevel::Edit) {
+				if has_perm_level(user_id, name, PermLevel::Edit) {
 					let mut header = StackComponent {
 						align_y: Some(AlignYOptions::Middle),
 						..StackComponent::fit()
