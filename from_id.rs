@@ -34,6 +34,13 @@ impl TaskBlock {
 					props.status = Block::by_id(property.value_id, conn)?
 						.filter(|block| can_view(user_id, block));
 				}
+				"dep" => {
+					let block = Block::by_id(property.value_id, conn)?
+						.filter(|block| can_view(user_id, block));
+					if let Some(block) = block {
+						props.deps.push(block);
+					}
+				}
 				_ => {}
 			}
 		}
@@ -58,6 +65,12 @@ impl TaskBlock {
 				}
 				"status" => {
 					props.status = Block::by_id(property.value_id, conn)?;
+				}
+				"dep" => {
+					let block = Block::by_id(property.value_id, conn)?;
+					if let Some(block) = block {
+						props.deps.push(block);
+					}
 				}
 				_ => {}
 			}

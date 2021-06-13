@@ -15,6 +15,7 @@ impl TaskBlock {
 			name,
 			description,
 			status,
+			..
 		} = Self::from_id_admin(block_id, conn)?;
 
 		if let Some(name) = name {

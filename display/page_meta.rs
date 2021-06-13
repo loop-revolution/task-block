@@ -1,8 +1,12 @@
 use block_tools::{
 	auth::permissions::{has_perm_level, PermLevel},
 	display_api::{
+		colors::ColorScheme,
 		component::{
-			atomic::icon::{Icon, IconComponent},
+			atomic::{
+				badge::BadgeComponent,
+				icon::{Icon, IconComponent},
+			},
 			form::input::{InputComponent, InputSize},
 			layout::stack::{AlignYOptions, StackComponent},
 			menus::menu::MenuComponent,
@@ -15,7 +19,7 @@ use block_tools::{
 use crate::blocks::{data_block::DataBlock, task_block::TaskBlock};
 
 impl TaskBlock {
-	pub fn page_meta(&self, block: &Block, user_id: Option<i32>) -> PageMeta {
+	pub fn page_meta(&self, block: &Block, user_id: Option<i32>, blocked: bool) -> PageMeta {
 		let mut page = PageMeta {
 			header: Some(
 				self.name
@@ -45,6 +49,12 @@ impl TaskBlock {
 							true,
 						)
 					});
+					if blocked {
+						header.push(BadgeComponent {
+							color_scheme: Some(ColorScheme::Orange),
+							..BadgeComponent::new("Blocked")
+						});
+					}
 					header.push(Self::status(self.status.clone(), block.id));
 					// Make the heading (which is the name) an input
 					page.header_component = Some(header.into());

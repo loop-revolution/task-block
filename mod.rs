@@ -19,6 +19,7 @@ pub struct TaskBlock {
 	pub name: Option<Block>,
 	pub description: Option<Block>,
 	pub status: Option<Block>,
+	pub deps: Vec<Block>,
 }
 
 impl BlockType for TaskBlock {

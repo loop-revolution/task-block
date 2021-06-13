@@ -1,4 +1,4 @@
-use crate::blocks::task_block::TaskBlock;
+use crate::{blocks::task_block::TaskBlock, delegation::display::delegate_embed_display};
 use block_tools::{
 	auth::{
 		optional_token, optional_validate_token,
@@ -6,8 +6,11 @@ use block_tools::{
 	},
 	blocks::Context,
 	display_api::{
+		colors::ColorScheme,
 		component::{
-			atomic::text::TextComponent, layout::stack::StackComponent,
+			atomic::{icon::Icon, text::TextComponent},
+			interact::button::{ButtonComponent, ButtonSize, ButtonVariant},
+			layout::stack::StackComponent,
 			misc::richtext::RichTextComponent,
 		},
 		DisplayMeta, DisplayObject,
@@ -48,8 +51,42 @@ impl TaskBlock {
 			})
 		}
 
+		// Dependency logic
+		let mut blocked_by = vec![];
+		for dep in data.deps.clone() {
+			blocked_by.push(delegate_embed_display(&dep, context));
+		}
+		let is_blocked = !blocked_by.is_empty();
+
+		let mut dep_section_title = StackComponent::fit();
+		dep_section_title.push(TextComponent {
+			bold: Some(true),
+			..TextComponent::new("Dependencies")
+		});
+		let add_dep_btn = ButtonComponent {
+			icon: Some(Icon::Plus),
+			interact: Some(Self::build_add_action_object(block.id)),
+			size: Some(ButtonSize::Small),
+			variant: Some(ButtonVariant::Outline),
+			color_scheme: Some(ColorScheme::Orange),
+			..ButtonComponent::new("Add dependency")
+		};
+		dep_section_title.push(add_dep_btn);
+
+		content.push(dep_section_title);
+
+		if is_blocked {
+			let mut stack = StackComponent::fit();
+			for task in blocked_by {
+				stack.push(task);
+			}
+			content.push(stack);
+		} else {
+			content.push(TextComponent::info("No dependencies"))
+		}
+
 		let meta = DisplayMeta {
-			page: Some(data.page_meta(block, user_id)),
+			page: Some(data.page_meta(block, user_id, is_blocked)),
 			..Default::default()
 		};
 		Ok(DisplayObject {

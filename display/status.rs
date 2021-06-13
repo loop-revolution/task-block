@@ -19,7 +19,7 @@ impl TaskBlock {
 			],
 			name: Some("STATUS".to_string()),
 			default: Some(status_index),
-			on_change: Some(Self::build_add_action_object(block_id)),
+			on_change: Some(Self::build_set_status_action_object(block_id)),
 			..DropdownComponent::default()
 		}
 	}

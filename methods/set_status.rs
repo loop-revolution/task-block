@@ -61,7 +61,7 @@ struct MethodArgs {
 }
 
 impl TaskBlock {
-	pub fn build_add_action_object(block_id: i64) -> ActionObject {
+	pub fn build_set_status_action_object(block_id: i64) -> ActionObject {
 		let method = MethodObject {
 			block_type: BLOCK_NAME.into(),
 			block_id: block_id.to_string(),

@@ -4,6 +4,7 @@ use block_tools::{
 	models::Block,
 	BlockError, LoopError,
 };
+mod add_dep;
 mod create;
 mod general_perm_update;
 mod set_status;
@@ -18,6 +19,7 @@ impl TaskBlock {
 	) -> Result<Block, LoopError> {
 		match name.as_str() {
 			"set_status" => Self::set_status_method(context, block_id, args),
+			"add_dep" => Self::add_method(context, block_id, args),
 			_ => Err(BlockError::MethodExist(name, Self::name()).into()),
 		}
 	}

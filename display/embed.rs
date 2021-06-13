@@ -5,19 +5,26 @@ use block_tools::{
 		permissions::{has_perm_level, PermLevel},
 	},
 	blocks::Context,
-	display_api::component::{
-		atomic::{
-			icon::{Icon, IconComponent},
-			text::TextComponent,
+	display_api::{
+		component::{
+			atomic::{
+				badge::BadgeComponent,
+				icon::{Icon, IconComponent},
+				text::TextComponent,
+			},
+			form::dropdown::DropdownComponent,
+			interact::{
+				button::{ButtonComponent, ButtonVariant},
+				link::LinkComponent,
+			},
+			layout::{
+				card::{CardComponent, DetachedMenu},
+				stack::{SpacingOptions, StackComponent},
+			},
+			menus::menu::MenuComponent,
+			DisplayComponent,
 		},
-		form::dropdown::DropdownComponent,
-		interact::link::LinkComponent,
-		layout::{
-			card::{CardComponent, DetachedMenu},
-			stack::{SpacingOptions, StackComponent},
-		},
-		menus::menu::MenuComponent,
-		DisplayComponent,
+		ActionObject, RedirectObject,
 	},
 	models::Block,
 	LoopError,
@@ -35,6 +42,7 @@ impl TaskBlock {
 			name,
 			description,
 			status,
+			deps,
 		} = Self::from_id(block.id, user_id, conn)?;
 
 		let mut icon_col = StackComponent::vertical();
@@ -44,6 +52,8 @@ impl TaskBlock {
 			spacing: Some(SpacingOptions::Between),
 			..StackComponent::fit()
 		};
+
+		let mut name_blocked_stack = StackComponent::fit();
 
 		let name = name
 			.and_then(|block| block.block_data)
@@ -57,8 +67,34 @@ impl TaskBlock {
 			no_style: Some(true),
 			..LinkComponent::new(text)
 		};
-		first_row.push(link);
+		name_blocked_stack.push(link);
 
+		// Dependency logic
+		let mut blocked_by = vec![];
+		for dep in deps {
+			let Self { status, name, .. } = Self::from_id(dep.id, user_id, conn)?;
+			// If it's not done, add to deps list
+			if status.and_then(|status| status.block_data) != Some("2".to_string()) {
+				let name = name
+					.and_then(|name| name.block_data)
+					.unwrap_or_else(|| "Untitled Task".to_string());
+				let redirect = RedirectObject::app_path(format!("b/{}", dep.id));
+				let action = ActionObject::redirect(redirect);
+				let button = ButtonComponent {
+					icon: Some(Icon::TaskComplete),
+					interact: Some(action),
+					variant: Some(ButtonVariant::Outline),
+					..ButtonComponent::new(name)
+				};
+				blocked_by.push(button);
+			}
+		}
+		if !blocked_by.is_empty() {
+			let blocked = BadgeComponent::new("Blocked");
+			name_blocked_stack.push(blocked);
+		}
+
+		first_row.push(name_blocked_stack);
 		let mut status_dropdown = DropdownComponent {
 			disabled: Some(true),
 			..Self::status(status, block.id)
@@ -79,6 +115,15 @@ impl TaskBlock {
 
 		if let Some(desc) = Self::description(&description, false) {
 			content_col.push(desc)
+		}
+
+		if !blocked_by.is_empty() {
+			let mut blocked_row = StackComponent::fit();
+			blocked_row.push(TextComponent::info("Blocked by"));
+			for button in blocked_by {
+				blocked_row.push(button)
+			}
+			content_col.push(blocked_row);
 		}
 
 		icon_col.push(IconComponent::new(Icon::TaskComplete));
