@@ -15,11 +15,20 @@ impl TaskBlock {
 			name,
 			description,
 			status,
+			assignee,
 			..
 		} = Self::from_id_admin(block_id, conn)?;
 
 		if let Some(name) = name {
 			name.update_perms(
+				perm_full.clone(),
+				perm_edit.clone(),
+				perm_view.clone(),
+				conn,
+			)?;
+		}
+		if let Some(assignee) = assignee {
+			assignee.update_perms(
 				perm_full.clone(),
 				perm_edit.clone(),
 				perm_view.clone(),

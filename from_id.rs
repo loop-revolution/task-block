@@ -34,6 +34,10 @@ impl TaskBlock {
 					props.status = Block::by_id(property.value_id, conn)?
 						.filter(|block| can_view(user_id, block));
 				}
+				"assignee" => {
+					props.assignee = Block::by_id(property.value_id, conn)?
+						.filter(|block| can_view(user_id, block));
+				}
 				"dep" => {
 					let block = Block::by_id(property.value_id, conn)?
 						.filter(|block| can_view(user_id, block));
@@ -65,6 +69,9 @@ impl TaskBlock {
 				}
 				"status" => {
 					props.status = Block::by_id(property.value_id, conn)?;
+				}
+				"assignee" => {
+					props.assignee = Block::by_id(property.value_id, conn)?;
 				}
 				"dep" => {
 					let block = Block::by_id(property.value_id, conn)?;

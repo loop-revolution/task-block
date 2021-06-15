@@ -14,12 +14,13 @@ mod name;
 
 pub const BLOCK_NAME: &str = "task";
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct TaskBlock {
 	pub name: Option<Block>,
 	pub description: Option<Block>,
 	pub status: Option<Block>,
 	pub deps: Vec<Block>,
+	pub assignee: Option<Block>,
 }
 
 impl BlockType for TaskBlock {

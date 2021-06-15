@@ -13,11 +13,16 @@ impl TaskBlock {
 			name,
 			description,
 			status,
+			assignee,
 			..
 		} = Self::from_id_admin(block_id, conn)?;
 
 		if let Some(name) = name {
 			name.update_public(public, conn)?;
+		}
+
+		if let Some(assignee) = assignee {
+			assignee.update_public(public, conn)?;
 		}
 		if let Some(description) = description {
 			description.update_public(public, conn)?;

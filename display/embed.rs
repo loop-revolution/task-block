@@ -14,12 +14,12 @@ use block_tools::{
 			},
 			form::dropdown::DropdownComponent,
 			interact::{
-				button::{ButtonComponent, ButtonVariant},
+				button::{ButtonComponent, ButtonSize, ButtonVariant},
 				link::LinkComponent,
 			},
 			layout::{
 				card::{CardComponent, DetachedMenu},
-				stack::{SpacingOptions, StackComponent},
+				stack::{AlignYOptions, SpacingOptions, StackComponent},
 			},
 			menus::menu::MenuComponent,
 			DisplayComponent,
@@ -38,12 +38,14 @@ impl TaskBlock {
 		let conn = &context.conn()?;
 		let user_id = optional_validate_token(optional_token(context))?;
 
+		let task = Self::from_id(block.id, user_id, conn)?;
 		let Self {
 			name,
 			description,
 			status,
 			deps,
-		} = Self::from_id(block.id, user_id, conn)?;
+			..
+		} = task.clone();
 
 		let mut icon_col = StackComponent::vertical();
 		let mut content_col = StackComponent::vertical();
@@ -53,7 +55,8 @@ impl TaskBlock {
 			..StackComponent::fit()
 		};
 
-		let mut name_blocked_stack = StackComponent::fit();
+		let mut name_badge_stack = StackComponent::fit();
+		name_badge_stack.align_y = Some(AlignYOptions::Middle);
 
 		let name = name
 			.and_then(|block| block.block_data)
@@ -67,7 +70,7 @@ impl TaskBlock {
 			no_style: Some(true),
 			..LinkComponent::new(text)
 		};
-		name_blocked_stack.push(link);
+		name_badge_stack.push(link);
 
 		// Dependency logic
 		let mut blocked_by = vec![];
@@ -84,6 +87,7 @@ impl TaskBlock {
 					icon: Some(Icon::TaskComplete),
 					interact: Some(action),
 					variant: Some(ButtonVariant::Outline),
+					size: Some(ButtonSize::Small),
 					..ButtonComponent::new(name)
 				};
 				blocked_by.push(button);
@@ -91,10 +95,15 @@ impl TaskBlock {
 		}
 		if !blocked_by.is_empty() {
 			let blocked = BadgeComponent::new("Blocked");
-			name_blocked_stack.push(blocked);
+			name_badge_stack.push(blocked);
 		}
 
-		first_row.push(name_blocked_stack);
+		let mut info_stack = StackComponent::vertical();
+
+		info_stack.push(name_badge_stack);
+
+		info_stack.push(Self::assigned_to_tag(task.assigned_user(conn)?, block.id));
+
 		let mut status_dropdown = DropdownComponent {
 			disabled: Some(true),
 			..Self::status(status, block.id)
@@ -110,6 +119,7 @@ impl TaskBlock {
 			menu.load_comments(conn)?;
 			detached_menu = Some(DetachedMenu::bottom_right(menu));
 		}
+		first_row.push(info_stack);
 		first_row.push(status_dropdown);
 		content_col.push(first_row);
 
@@ -119,6 +129,7 @@ impl TaskBlock {
 
 		if !blocked_by.is_empty() {
 			let mut blocked_row = StackComponent::fit();
+			blocked_row.align_y = Some(AlignYOptions::Middle);
 			blocked_row.push(TextComponent::info("Blocked by"));
 			for button in blocked_by {
 				blocked_row.push(button)

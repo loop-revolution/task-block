@@ -5,6 +5,7 @@ use block_tools::{
 	BlockError, LoopError,
 };
 mod add_dep;
+mod assign;
 mod create;
 mod general_perm_update;
 mod set_status;
@@ -20,6 +21,7 @@ impl TaskBlock {
 		match name.as_str() {
 			"set_status" => Self::set_status_method(context, block_id, args),
 			"add_dep" => Self::add_method(context, block_id, args),
+			"assign" => Self::assign_method(context, block_id, args),
 			_ => Err(BlockError::MethodExist(name, Self::name()).into()),
 		}
 	}

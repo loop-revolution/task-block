@@ -10,7 +10,7 @@ use block_tools::{
 		component::{
 			atomic::{icon::Icon, text::TextComponent},
 			interact::button::{ButtonComponent, ButtonSize, ButtonVariant},
-			layout::stack::StackComponent,
+			layout::stack::{AlignYOptions, StackComponent},
 			misc::richtext::RichTextComponent,
 		},
 		DisplayMeta, DisplayObject,
@@ -39,6 +39,8 @@ impl TaskBlock {
 			}
 		}
 
+		content.push(Self::assigned_to_tag(data.assigned_user(conn)?, block.id));
+
 		content.push(TextComponent {
 			bold: Some(true),
 			..TextComponent::new("Description")
@@ -59,6 +61,7 @@ impl TaskBlock {
 		let is_blocked = !blocked_by.is_empty();
 
 		let mut dep_section_title = StackComponent::fit();
+		dep_section_title.align_y = Some(AlignYOptions::Middle);
 		dep_section_title.push(TextComponent {
 			bold: Some(true),
 			..TextComponent::new("Dependencies")
@@ -68,8 +71,8 @@ impl TaskBlock {
 			interact: Some(Self::build_add_action_object(block.id)),
 			size: Some(ButtonSize::Small),
 			variant: Some(ButtonVariant::Outline),
-			color_scheme: Some(ColorScheme::Orange),
-			..ButtonComponent::new("Add dependency")
+			color_scheme: Some(ColorScheme::Red),
+			..ButtonComponent::new("")
 		};
 		dep_section_title.push(add_dep_btn);
 
