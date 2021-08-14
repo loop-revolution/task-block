@@ -7,11 +7,7 @@ use block_tools::{
 	blocks::Context,
 	display_api::{
 		component::{
-			atomic::{
-				badge::BadgeComponent,
-				icon::{Icon, IconComponent},
-				text::TextComponent,
-			},
+			atomic::{badge::BadgeComponent, icon::Icon, text::TextComponent},
 			form::dropdown::DropdownComponent,
 			interact::{
 				button::{ButtonComponent, ButtonSize, ButtonVariant},
@@ -46,6 +42,7 @@ impl TaskBlock {
 			deps,
 			..
 		} = task.clone();
+		let status_index = Self::status_index(&status);
 
 		let mut icon_col = StackComponent::vertical();
 		let mut content_col = StackComponent::vertical();
@@ -63,6 +60,7 @@ impl TaskBlock {
 			.unwrap_or_else(|| "Untitled Task".into());
 		let text = TextComponent {
 			bold: Some(true),
+			strikethrough: if status_index == 2 { Some(true) } else { None },
 			..TextComponent::new(name)
 		};
 		let link = LinkComponent {
@@ -76,8 +74,9 @@ impl TaskBlock {
 		let mut blocked_by = vec![];
 		for dep in deps {
 			let Self { status, name, .. } = Self::from_id(dep.id, user_id, conn)?;
+			let status_index = Self::status_index(&status);
 			// If it's not done, add to deps list
-			if status.and_then(|status| status.block_data) != Some("2".to_string()) {
+			if status_index != 2 {
 				let name = name
 					.and_then(|name| name.block_data)
 					.unwrap_or_else(|| "Untitled Task".to_string());
@@ -106,7 +105,7 @@ impl TaskBlock {
 
 		let mut status_dropdown = DropdownComponent {
 			disabled: Some(true),
-			..Self::status(status, block.id)
+			..Self::status(&status, block.id)
 		};
 
 		let mut detached_menu = None;
@@ -137,14 +136,18 @@ impl TaskBlock {
 			content_col.push(blocked_row);
 		}
 
-		icon_col.push(IconComponent::new(Icon::TaskComplete));
+		icon_col.push(Self::icon(status_index));
 
 		let mut content = StackComponent::horizontal();
 		content.push(icon_col);
 		content.push(content_col);
 
 		Ok(CardComponent {
-			color: block.color.clone(),
+			color: if status_index == 2 {
+				Some("#393939".to_string())
+			} else {
+				block.color.clone()
+			},
 			detached_menu,
 			..CardComponent::new(content)
 		}

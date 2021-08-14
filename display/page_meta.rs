@@ -3,10 +3,7 @@ use block_tools::{
 	display_api::{
 		colors::ColorScheme,
 		component::{
-			atomic::{
-				badge::BadgeComponent,
-				icon::{Icon, IconComponent},
-			},
+			atomic::{badge::BadgeComponent, text::TextComponent},
 			form::input::{InputComponent, InputSize},
 			layout::stack::{AlignYOptions, StackComponent},
 			menus::menu::MenuComponent,
@@ -39,8 +36,9 @@ impl TaskBlock {
 						align_y: Some(AlignYOptions::Middle),
 						..StackComponent::fit()
 					};
-					header.push(IconComponent::new(Icon::TaskComplete));
-					header.push(InputComponent {
+					let status_index = Self::status_index(&self.status);
+					header.push(Self::icon(status_index));
+					let mut input = InputComponent {
 						label: Some("Task Name".into()),
 						size: Some(InputSize::Medium),
 						..DataBlock::masked_editable_data(
@@ -48,14 +46,23 @@ impl TaskBlock {
 							name.block_data.clone(),
 							true,
 						)
-					});
+					};
+					if status_index == 2 {
+						if let Some(mask) = input.mask {
+							input.mask = Some(TextComponent {
+								strikethrough: Some(true),
+								..mask
+							});
+						}
+					}
+					header.push(input);
 					if blocked {
 						header.push(BadgeComponent {
 							color_scheme: Some(ColorScheme::Orange),
 							..BadgeComponent::new("Blocked")
 						});
 					}
-					header.push(Self::status(self.status.clone(), block.id));
+					header.push(Self::status(&self.status, block.id));
 					// Make the heading (which is the name) an input
 					page.header_component = Some(header.into());
 					// Remove the backup
